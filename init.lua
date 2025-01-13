@@ -23,9 +23,6 @@ vim.opt.timeoutlen = 300
 vim.opt.splitright = true
 vim.opt.splitbelow = true
 
--- Color highlighting
-vim.cmd([[hi @function.builtin guifg=red]])
-
 -- Sets how neovim will display certain whitespace characters in the editor.
 --  See `:help 'list'`
 --  and `:help 'listchars'`
@@ -80,6 +77,21 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 	group = vim.api.nvim_create_augroup("kickstart-highlight-yank", { clear = true }),
 	callback = function()
 		vim.highlight.on_yank()
+	end,
+})
+
+local triggers = { "." }
+vim.api.nvim_create_autocmd("InsertCharPre", {
+	buffer = vim.api.nvim_get_current_buf(),
+	callback = function()
+		if vim.fn.pumvisible() == 1 or vim.fn.state("m") == "m" then
+			return
+		end
+		local char = vim.v.char
+		if vim.list_contains(triggers, char) then
+			local key = vim.keycode("<C-x><C-n>")
+			vim.api.nvim_feedkeys(key, "m", false)
+		end
 	end,
 })
 
@@ -669,7 +681,6 @@ require("lazy").setup({
 		priority = 1000, -- Make sure to load this before all the other start plugins.
 		init = function()
 			vim.cmd.colorscheme("tokyonight-night")
-			vim.cmd.hi("Comment gui=none")
 		end,
 	},
 
@@ -727,6 +738,7 @@ require("lazy").setup({
 			ensure_installed = {
 				"bash",
 				"c",
+				"cpp",
 				"diff",
 				"html",
 				"json",
@@ -798,6 +810,7 @@ require("lazy").setup({
 		},
 	},
 })
-
+-- Apply custom colors
+require("colors")
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
